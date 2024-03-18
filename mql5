@@ -1,0 +1,59 @@
+ 
+//+------------------------------------------------------------------+
+//|                                            Position Size Calculator|
+//|                                    https://www.forexroboteasy.com |
+//|                                       Developed by Forex Robot Easy Team |
+//+------------------------------------------------------------------+
+#property indicator_chart_window
+#property indicator_buffers 1
+#property indicator_color1 Lime
+
+input double RiskPercentage = 2.0;      // Risk size in percentage
+input double RiskRewardRatio = 2.0;     // Risk-reward ratio
+input bool PlaceStopLossLine = true;    // Option to place a horizontal line at StopLoss level
+input bool CustomizeEntryLevel = true;  // Option to customize entry level
+
+double LotSize;
+double StopLossLevel;
+
+//+------------------------------------------------------------------+
+//| Custom indicator initialization function                         |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+    IndicatorSetString(INDICATOR_SHORTNAME, 'Position Size Calculator');
+    SetIndexBuffer(0, LotSize);
+    SetIndexStyle(0, DRAW_LINE, STYLE_SOLID, 2);
+    return(INIT_SUCCEEDED);
+}
+
+//+------------------------------------------------------------------+
+//| Custom indicator iteration function                              |
+//+------------------------------------------------------------------+
+int OnCalculate(const int rates_total, const int prev_calculated, const datetime &time[], const double &open[],
+                const double &high[], const double &low[], const double &close[], const long &tick_volume[],
+                const long &volume[], const int &spread[])
+{
+    if(CustomizeEntryLevel)
+    {
+        // Code to customize entry level here
+    }
+
+    double Balance = AccountBalance();
+    double AccountRisk = Balance * RiskPercentage / 100;
+    double Reward = AccountRisk * RiskRewardRatio;
+
+    double EntryPrice = close[0];
+    double StopLoss = EntryPrice - Reward;
+
+    if(PlaceStopLossLine)
+    {
+        ObjectCreate('StopLossLine', OBJ_HLINE, 0, 0, StopLoss);
+        ObjectSet('StopLossLine', OBJPROP_COLOR, Lime);
+    }
+
+    LotSize = AccountRisk / (StopLoss - EntryPrice);
+    return(rates_total);
+}
+
+//+------------------------------------------------------------------+
